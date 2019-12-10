@@ -44,6 +44,7 @@ export default class App extends Component {
             _mathExpression: '',
             _history: [],
             listMoney: [],
+            _numBtn: 0,
             _isMoney: false,
             _isFetched: false,
             _rateUSD: 0,
@@ -93,6 +94,10 @@ export default class App extends Component {
 
     //Handles actions on button press
     _handleEvent = (value) => {
+        this.setState({
+            _numBtn: this.state._numBtn +1
+        });
+        //console.log(this.state._numBtn);
         if(value === '฿') {
             this.setState( (prevState) => ({
                 _isMoney: !prevState._isMoney,
@@ -132,9 +137,15 @@ export default class App extends Component {
 
                 case 'AC':
                     this._initOutput();
+                    this.setState({
+                        _numBtn: initialOutput
+                    });
                     break;
 
                 case 'C':
+                    this.setState({
+                        _numBtn: (this.state._numBtn===1)? initialOutput:this.state._numBtn-1
+                    });
                     if (this.state._output.length === 1){
                         this._initOutput();
                     }
@@ -142,27 +153,33 @@ export default class App extends Component {
                         //this._showToast(this.state._output.slice(-2));
                         if(this.state._output.slice(-2)==='s('||this.state._output.slice(-2)==='n(')
                         {
-                            this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');
+                            if (this.state._output.length === 4){
+                                this._initOutput();
+                            }
+                            else {
+                                this._replaceLastIndex('');
+                                this._replaceLastIndex('');
+                                this._replaceLastIndex('');
+                                this._replaceLastIndex('');
+                            }
                         }
                         else if(this.state._output.slice(-2)==='√(')
                         {
-                            this._replaceLastIndex('');this._replaceLastIndex('');
+                            if (this.state._output.length === 2){
+                                this._initOutput();
+                            }
+                            else {
+                                this._replaceLastIndex('');
+                                this._replaceLastIndex('');
+                            }
                         }
                         else if(this.state._output.slice(-3)==='NaN')
                         {
-                            this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');
-                            this.setState({
-                                _output: initialOutput,
-                                _resultAuto: initialOutput
-                            })
+                            this._initOutput();
                         }
                         else if(this.state._output.slice(-8)==='Infinity')
                         {
-                            this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');this._replaceLastIndex('');
-                            this.setState({
-                                _output: initialOutput,
-                                _resultAuto: initialOutput
-                            })
+                            this._initOutput();
                         }
                         else this._replaceLastIndex('');
                     }
@@ -171,6 +188,9 @@ export default class App extends Component {
 
                 case buttons[5][3]:
                     this._evaluate();
+                    this.setState({
+                        _numBtn: this.state._numBtn +1
+                    });
                     break;
 
                 case buttons[2][4]: case buttons[3][4]: case buttons[4][4]: case buttons[5][4]: case buttons[5][1]: case buttons[1][0]:
@@ -199,17 +219,16 @@ export default class App extends Component {
         }
         else{
             let value2 = value;
-            if(value==='√x') value2= '√(';
-            if(value==='xʸ') value2= '^';
-            if(value==='|x|') value2= 'abs(';
             if(value==='sin') value2= 'sin(';
             if(value==='cos') value2= 'cos(';
             if(value==='tan') value2= 'tan(';
-            if(this.state._output !== initialOutput){
-                this.setState({_output: this.state._output + '' + value2 + ''})
-            }
-            else{
+            if(value==='√x') value2= '√(';
+            if(value==='xʸ') value2= '^';
+            if(value==='|x|') value2= 'abs(';
+            if (this.state._output === initialOutput && value2!=='.') {
                 this.setState({_output: value2 + ''})
+            } else {
+                this.setState({_output: this.state._output + '' + value2 + ''})
             }
         }
     };
@@ -218,7 +237,7 @@ export default class App extends Component {
         if(this.state._isMoney){
             if(this.state._isVND){
                 this.setState({
-                    _VND: (this.state._VND !== initialOutput)?this.state._VND + '' + value + '': value + '',
+                    _VND: (this.state._VND === initialOutput && value!=='.') ? value + '' : this.state._VND + '' + value + '',
                 });
                 this.setState({
                     _USD: this.state._VND/this.state._rateUSD,
@@ -227,7 +246,7 @@ export default class App extends Component {
             }
             else if(this.state._isUSD){
                 this.setState({
-                    _USD: (this.state._USD !== initialOutput)?this.state._USD + '' + value + '': value + '',
+                    _USD: (this.state._USD === initialOutput && value!=='.') ? value + '' : this.state._USD + '' + value + '',
                 });
                 this.setState({
                     _VND: this.state._USD*this.state._rateUSD,
@@ -236,7 +255,7 @@ export default class App extends Component {
             }
             else if(this.state._isJPY){
                 this.setState({
-                    _JPY: (this.state._JPY !== initialOutput)?this.state._JPY + '' + value + '': value + '',
+                    _JPY: (this.state._JPY === initialOutput && value!=='.') ? value + '' : this.state._JPY + '' + value + '',
                 });
                 this.setState({
                     _VND: this.state._JPY*this.state._rateJPY,
@@ -258,12 +277,17 @@ export default class App extends Component {
     _evaluateResult = () => {
         try{
             let strCurOutput = this.state._output;
+            //console.log(strCurOutput);
             if(isNaN(strCurOutput)){
                 let dEval = eval(this._convertToMathExpression(this.state._output));
-
                 if(dEval!==eval(1/0)){
                     this.setState({
                         _resultAuto: '' + dEval,
+                    })
+                }
+                else{
+                    this.setState({
+                        _resultAuto: '' + strCurOutput,
                     })
                 }
             }
@@ -290,9 +314,6 @@ export default class App extends Component {
 
                 if(dEval===eval(1/0)){
                     this._showToast('MATH ERROR');
-                    this.setState({
-                      _resultAuto: '' + dEval
-                    })
                 }
                 else {
                     this.setState({
@@ -305,7 +326,7 @@ export default class App extends Component {
         }
         catch(exception){
             /* console.log('exception: ' + exception); */
-            //this._showToast(this.state._output);
+            //console.log(this.state._output);
             this._showToast('MATH ERROR');
         }
     };
@@ -323,13 +344,16 @@ export default class App extends Component {
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[3][0]), 'g'), 'Math.E');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[4][0]), 'g'), 'Math.PI');
 
-
         //strTemp = strTemp.replace('sin(', 'Math.sin(');
         //strTemp = strTemp.replace('cos(', 'Math.cos(');
         //strTemp = strTemp.replace('tan(', 'Math.tan(');
-        //strTemp = strTemp.replace('√(', 'Math.sqrt(');
-        //strTemp = strTemp.replace('abs(', 'Math.abs(');
-
+        for(let i =0; i<this.state._numBtn; i++) {
+            strTemp = strTemp.replace('√(', 'Math.sqrt(');
+            strTemp = strTemp.replace('abs(', 'Math.abs(');
+            strTemp = strTemp.replace("PI(", "PI*(");
+            strTemp = strTemp.replace("PIMath", "PI*Math");
+            strTemp = strTemp.replace(")Ma", ")*Ma");
+        }
         //Tính lũy thừa
         for(let i=1; i< strTemp.length; i++){
             let numTemp = 0, dem=0, j;
@@ -368,9 +392,6 @@ export default class App extends Component {
                 return x.replace("PI", "PI*");
             });
         }
-        strTemp = strTemp.replace("PI(", "PI*(");
-        strTemp = strTemp.replace("PIMath", "PI*Math");
-        strTemp = strTemp.replace(")Ma", ")*Ma");
 
         //Bổ sung dấu ( or ) nếu thiếu
         let l = strTemp.split("(").length, r =strTemp.split(")").length;

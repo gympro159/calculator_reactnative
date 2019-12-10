@@ -10,7 +10,9 @@ import {
 import styles from './styles';
 
 export default class HistoryView extends Component {
-
+    constructor(props){
+        super(props);
+    }
     //This is for optimization
     //Component should not re-render if props have no changes
     shouldComponentUpdate(nextProps, nextState){
@@ -24,7 +26,7 @@ export default class HistoryView extends Component {
     //to clear history
     _onClear = () => {
         this.props.onClear();
-    }
+    };
 
     render() {
         //Check if data array is empty
