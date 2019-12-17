@@ -393,6 +393,7 @@ export default class App extends Component {
                         numTemp += strTemp[j] * Math.pow(10, dem);
                         dem++;
                         //this._showToast(j.toString());
+
                     }
                     j++;
                     if(j===0)
