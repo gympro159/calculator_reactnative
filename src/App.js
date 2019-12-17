@@ -1,4 +1,4 @@
-//React Modules
+
 import React, { Component } from 'react';
 import axios from 'axios'
 import {View,Text,ToastAndroid, ScrollView, Image} from 'react-native';
@@ -128,9 +128,13 @@ export default class App extends Component {
         }
         else if(!isNaN(value) || value=== '(' || value === ')'
             || value === 'e' || value === 'п' || value ==='%'){
-            this._moneyOutput(value);
-            this._concatToOutput(value);
-            this._evaluateResult();
+            if(this.state._isMoney){
+                this._moneyOutput(value);
+            }
+            else {
+                this._concatToOutput(value);
+                this._evaluateResult();
+            }
         }
         else{
             switch(value) {
@@ -223,8 +227,8 @@ export default class App extends Component {
             if(value==='cos') value2= 'cos(';
             if(value==='tan') value2= 'tan(';
             if(value==='√x') value2= '√(';
-            if(value==='xʸ') value2= '^';
-            if(value==='|x|') value2= 'abs(';
+            if(value==='xʸ') value2= '^(';
+            if(value==='|x|') value2= 'Abs(';
             if (this.state._output === initialOutput && value2!=='.') {
                 this.setState({_output: value2 + ''})
             } else {
@@ -339,73 +343,78 @@ export default class App extends Component {
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[0][2]), 'g'), 'Math.sin');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[0][3]), 'g'), 'Math.cos');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[0][4]), 'g'), 'Math.tan');
-        strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[0][0]), 'g'), 'Math.sqrt(');
+        strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[0][0]), 'g'), 'Math.sqrt');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[2][0]), 'g'), 'Math.abs');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[3][0]), 'g'), 'Math.E');
         strTemp = strTemp.replace(new RegExp(this._escapeRegExp(buttons[4][0]), 'g'), 'Math.PI');
 
-        //strTemp = strTemp.replace('sin(', 'Math.sin(');
-        //strTemp = strTemp.replace('cos(', 'Math.cos(');
-        //strTemp = strTemp.replace('tan(', 'Math.tan(');
         for(let i =0; i<this.state._numBtn; i++) {
+            strTemp = strTemp.replace('Abs(', 'Math.abs(');
             strTemp = strTemp.replace('√(', 'Math.sqrt(');
-            strTemp = strTemp.replace('abs(', 'Math.abs(');
+
             strTemp = strTemp.replace("PI(", "PI*(");
+            strTemp = strTemp.replace("E(", "E*(");
             strTemp = strTemp.replace("PIMath", "PI*Math");
+            strTemp = strTemp.replace("EMath", "E*Math");
             strTemp = strTemp.replace(")Ma", ")*Ma");
-        }
-        //Tính lũy thừa
-        for(let i=1; i< strTemp.length; i++){
-            let numTemp = 0, dem=0, j;
-            if(strTemp[i] === '^') {
-                for (j = i - 1; j >= 0; j--) {
-                    if (isNaN(strTemp[j])) {
-                        //this._showToast(j.toString());
-                        break;
-                    }
-                    numTemp += strTemp[j] * Math.pow(10, dem);
-                    dem++;
-                    //this._showToast(j.toString());
+
+            //Bổ sung dấu ( or ) nếu thiếu
+            let l = strTemp.split("(").length, r =strTemp.split(")").length;
+            if(l===1&&r===2) strTemp = "(" + strTemp;
+            if(l > r){
+                for(let i=0; i< l-r ; i++){
+                    strTemp = strTemp + ")";
                 }
-                j++;
-                //this._showToast(j.toString());
-                strTemp = strTemp.slice(j);
-                //this._showToast(strTemp);
-                strTemp = strTemp.replace(numTemp + "^", 'Math.pow(' + numTemp + ',');
-                //this._showToast(j.toString());
-                //this._showToast(numTemp.toString());
+            }
+            else if (l<r){
+                for(let i=0; i< r-l ; i++){
+                    strTemp = "(" + strTemp;
+                }
+            }
+
+            //Thêm dấu * ở sau ()
+            for(let i=0; i<=9; i++) {
+                strTemp = strTemp.replace(i+"(", i+"*(");
+                strTemp = strTemp.replace(")"+i, ")*"+i);
+                strTemp = strTemp.replace(i+"M", i+"*M");
+                strTemp = strTemp.replace("PI"+i, "PI*"+i);
+                strTemp = strTemp.replace("E"+i, "E*"+i);
+            }
+
+            //Tính lũy thừa
+            for(let i=strTemp.length; i>=0; i--){
+                let numTemp = 0, dem=0, j;
+                if(strTemp[i] === '^') {
+                    for (j = i - 1; j >= 0; j--) {
+                        if (isNaN(strTemp[j])) {
+                            //this._showToast(j.toString());
+                            break;
+                        }
+                        numTemp += strTemp[j] * Math.pow(10, dem);
+                        dem++;
+                        //this._showToast(j.toString());
+                    }
+                    j++;
+                    if(j===0)
+                    {
+                        strTemp = strTemp.replace(numTemp + "^(", 'Math.pow(' + numTemp + ',');
+                    }
+                    else {
+                        //this._showToast(j.toString());
+                        let strTemp1 = strTemp.slice(0, j - 1), strTemp2 = strTemp.slice(j);
+                        //this._showToast(strTemp);
+                        strTemp2 = strTemp2.replace(numTemp + "^(", 'Math.pow(' + numTemp + ',');
+                        strTemp = strTemp1 + strTemp2;
+                    }
+                    //this._showToast(j.toString());
+                    //this._showToast(numTemp.toString());
+                }
+
             }
         }
 
-        //Thêm dấu * ở sau ()
-        for(let i=0; i<=9; i++) {
-            strTemp = strTemp.replace(i+"(", function (x) {
-                return x.replace("(", "*(");
-            });
-            strTemp = strTemp.replace(")"+i, function (x) {
-                return x.replace(")", ")*");
-            });
-            strTemp = strTemp.replace(i+"M", function (x) {
-                return x.replace("M", "*M");
-            });
-            strTemp = strTemp.replace("PI"+i, function (x) {
-                return x.replace("PI", "PI*");
-            });
-        }
 
-        //Bổ sung dấu ( or ) nếu thiếu
-        let l = strTemp.split("(").length, r =strTemp.split(")").length;
-        if(l===1&&r===2) strTemp = "(" + strTemp;
-        if(l > r){
-            for(let i=0; i< l-r ; i++){
-                strTemp = strTemp + ")";
-            }
-        }
-        else if (l<r){
-            for(let i=0; i< r-l ; i++){
-                strTemp = "(" + strTemp;
-            }
-        }
+
 
         //this._showToast(strTemp);
         console.log(strTemp);
@@ -413,6 +422,7 @@ export default class App extends Component {
     };
 
     _escapeRegExp = (str) => {
+        //console.log(str);
         return str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
     };
 

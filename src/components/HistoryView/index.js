@@ -51,7 +51,6 @@ export default class HistoryView extends Component {
                             this.scrollView.scrollToEnd({animated: true});
                         }}>
 
-
                         {
                             this.props.data.map((history, index) => (
                                 <View key={index} style={styles.historyCont}>
