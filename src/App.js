@@ -402,7 +402,7 @@ export default class App extends Component {
                     }
                     else {
                         //this._showToast(j.toString());
-                        let strTemp1 = strTemp.slice(0, j - 1), strTemp2 = strTemp.slice(j);
+                        let strTemp1 = strTemp.slice(0, j - 1), strTemp2 = strTemp.slice(j-1);
                         //this._showToast(strTemp);
                         strTemp2 = strTemp2.replace(numTemp + "^(", 'Math.pow(' + numTemp + ',');
                         strTemp = strTemp1 + strTemp2;
@@ -418,7 +418,7 @@ export default class App extends Component {
 
 
         //this._showToast(strTemp);
-        console.log(strTemp);
+        //console.log(strTemp);
         return strTemp;
     };
 
